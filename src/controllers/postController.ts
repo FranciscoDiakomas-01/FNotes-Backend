@@ -17,7 +17,7 @@ export async function getAllPost(req: Request, res: Response) {
   const { rowCount } = await db.query("SELECT id FROM post");
   const lastPage = Math.ceil(rowCount || 1 / limit);
   db.query(
-    "SELECT post.cover , post.id , post.status , post.title , post.description , to_char(post.created_at , 'dd/mm/yyyy') as created_at , category.title as categoryTitle , category.description as categpryDesc FROM post JOIN category on post.categoryid = category.id WHERE post.categoryid = category.id LIMIT $1;",
+    "SELECT post.cover , post.id as postid, post.status as poststatus, post.title , post.description , to_char(post.created_at , 'dd/mm/yyyy') as created_at , category.title as categoryTitle , category.description as categpryDesc FROM post JOIN category on post.categoryid = category.id WHERE post.categoryid = category.id LIMIT $1;",
     [limit],
     async (err, result) => {
       if (err) {
@@ -117,6 +117,7 @@ export async function deletePostById(req: Request, res: Response) {
   } else {
     await getAndDeleteFileById(id, db);
     db.query("DELETE FROM post WHERE id = $1;", [id], async (err, result) => {
+      //deletar todos os comentarios deste post tambem
       if (err) {
         res.status(400).json({
           error: err.message,
@@ -155,11 +156,11 @@ export async function updatePost(req: Request, res: Response) {
     const categoryvalidation = await verifyCategory(db, post.categoryId);
     //verificar se existe esse post , caso n exista elimine o arquivo que foi enviado
     //caso a validacao , a categoria ou o post não existe elimine o arquivo submetido
-    const { rows }  = await db.query("SELECT id FROM post WHERE id = $1 LIMIT 1;",[id])
+    const { rows } = await db.query("SELECT id FROM post WHERE id = $1 LIMIT 1;", [id])
     if (rows[0]?.id == undefined || !valiationResult || !categoryvalidation) {
         await DeleteFile(req.file?.path || "");
         res.status(400).json({
-            error : "post not found"
+            error : "post not found , or category not found"
         })
         return await db.end()
     }

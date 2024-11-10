@@ -5,7 +5,6 @@ import { ILogin } from '../types/types'
 import ConnectToDb from '../database/dbConnection'
 import validator from 'validator'
 import { GerenetaToken } from '../middlewares/token'
-
 dotnenv.config()
 
 export default async function login(req: Request, res: Response) {
@@ -16,7 +15,7 @@ export default async function login(req: Request, res: Response) {
     }
     //validation
     if (validator.isEmail(loginBody.email) && loginBody?.password.length >= 8) {
-        const { rows } = await db.query("SELECT email , id , password FROM users WHERE email = $1 ",[loginBody.email]);
+        const { rows } = await db.query("SELECT email , id , password FROM users WHERE email = $1 LIMIT 1;",[loginBody.email]);
         if (rows.length == 0) {
             res.status(200).json({
                 error: "user not found",
@@ -28,8 +27,9 @@ export default async function login(req: Request, res: Response) {
             if (isMAtchPassWord.toString(CryptoJS.enc.Utf8) == loginBody.password) {
                 const token = await GerenetaToken(rows[0]?.id)
                 res.status(200).json({
-                    sucess: "logged",
-                    token
+                  msg: "susess",
+                  token,
+                  isAdmin: rows[0]?.id == 1 
                 });
                 return await db.end();
             } else {

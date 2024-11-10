@@ -9,10 +9,17 @@ import path from 'node:path'
 import loginRouter from './routes/loginRoutes'
 import commentRouter from './routes/commentRoute'
 dotenv.config()
-async function RunnServer() {
-    
-    await RunnMigrations()
+import InsertDefaultAdmin from './database/defaultAdmin'
 
+
+async function RunnServer() {
+    await RunnMigrations()
+    try {
+        await InsertDefaultAdmin();
+    } catch (error) {
+        
+        await InsertDefaultAdmin();
+    }
     const server = express();
     //globlal middlewares
     server.use(cors())

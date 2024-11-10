@@ -3,18 +3,25 @@ import ConnectToDb from "../database/dbConnection";
 import { ICreateUser } from "../types/types";
 import CryptoJS from "crypto-js";
 import dotenv from 'dotenv'
-dotenv.config()
 import { ValidateUserCreation } from "../service/validateUser";
+import isAdmin from "../service/isAdmin";
 
-
+dotenv.config();
 export async function getAllUsers(req: Request, res: Response) {
-    const db = await ConnectToDb()
+  const db = await ConnectToDb()
+  const isAd = await isAdmin(req.headers['authorization'] || "")
+  if (!isAd) {
+    res.status(401).json({
+      error : 'permition not allowed'
+    })
+    return await  db.end()
+  }
     const limit : number = Number(req.query.limit) || 10
     const page  : number = Number(req.query.page) || 1
     const offset: number = (page - 1) * limit
     const { rowCount } = await db.query("SELECT id FROM users")
     const lastPage = Math.ceil( rowCount || 1 / limit)
-    db.query("SELECT * FROM users LIMIT $1 OFFSET $2;", [limit, offset], async(err, result) => {
+    db.query("SELECT id , name , email , status , profile , created_at , permistion FROM users ORDER BY id LIMIT $1 OFFSET $2 ;", [limit, offset], async(err, result) => {
         if (err) {
             res.status(400).json({
                 error : err.message
@@ -42,7 +49,7 @@ export async function getUserById(req: Request, res: Response) {
     })
     return db.end()
   }
-  db.query("SELECT * FROM users  WHERE id = $1 LIMIT 1;",[id],async (err, result) => {
+  db.query("SELECT SELECT id , name , email , status , profile , created_at , permistion FROM users  WHERE id = $1 LIMIT 1;",[id],async (err, result) => {
       if (err) {
         res.status(400).json({
           error: err.message,
@@ -62,6 +69,13 @@ export async function getUserById(req: Request, res: Response) {
 export async function deleteUserById(req: Request, res: Response) {
   const db = await ConnectToDb();
   const id: number = Number(req.params.id);
+  const isAd = await isAdmin(req.headers["authorization"] || "");
+  if (!isAd) {
+    res.status(401).json({
+      error: "permition not allowed",
+    });
+    return await db.end();
+  }
   if (!id) {
     res.status(400).json({
       error: "invalid id",

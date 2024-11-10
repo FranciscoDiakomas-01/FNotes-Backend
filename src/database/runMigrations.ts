@@ -16,9 +16,13 @@ export default async function RunnMigrations() {
                   if (sqlQuery.toString().length > 0) {
                     await db.query(sqlQuery.toString(), (err, rows) => {
                         if (err) {
-                          console.log("error running migration ", err.message , " " ,file);
+                          console.log("error running migration ", err.message, " ", file);
+                          process.exit(1)
                         } 
                     });
+                  } else {
+                          console.log("Empty file" + file)
+                          process.exit(1);
                   }
             });
           }

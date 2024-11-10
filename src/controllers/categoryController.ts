@@ -41,7 +41,7 @@ export async function createCategory(req: Request, res: Response) {
         db.query("INSERT INTO category( description , title , status) VALUES( $1 , $2 , $3) RETURNING id;",[category.description, category.title , category.status],async (err, result) => {
             if (err) {
               res.status(400).json({
-                error: 'category alrery exists',
+                error: 'category alrery exists' + err.message,
               });
               return await db.end();
             } else {

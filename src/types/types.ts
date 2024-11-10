@@ -44,5 +44,5 @@ export interface ILogin {
 export interface ICreateComment {
   content: string,
   postId: number,
-  userId : number
+  userId: number,
 }
