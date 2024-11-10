@@ -8,9 +8,10 @@ import postRouter from './routes/postRoute'
 import path from 'node:path'
 import loginRouter from './routes/loginRoutes'
 import commentRouter from './routes/commentRoute'
-dotenv.config()
 import InsertDefaultAdmin from './database/defaultAdmin'
+import dashBoardRouter from './routes/dashBoard'
 
+dotenv.config();
 
 async function RunnServer() {
     await RunnMigrations()
@@ -32,6 +33,7 @@ async function RunnServer() {
     server.use(postRouter);
     server.use(loginRouter);
     server.use(commentRouter);
+    server.use(dashBoardRouter);
     //listen on port
     server.listen(serverPort ?? 4000, () => {
     console.log("Server Running on http://localhost:" + serverPort);

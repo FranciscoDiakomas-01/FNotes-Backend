@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS users (
 */
 CREATE TABLE IF NOT EXISTS category(
     id serial not null primary key,
-    title varchar(50) not null,
+    title varchar(50) not null unique,
     description text check(length(description) <= 200),
     created_at timestamp default now(),
     status int not null default 1
@@ -29,11 +29,12 @@ CREATE TABLE IF NOT EXISTS category(
 */
 CREATE TABLE IF NOT EXISTS post(
     id serial not null primary key,
-    title varchar(50) not null,
+    title varchar(50) not null unique,
     cover text,
     description text check(length(description) <= 200),
     categoryId int not null references category(id) on delete cascade,
-    status int not null default 1
+    status int not null default 1,
+    created_at timestamp not null default now()
 );
 
 /*

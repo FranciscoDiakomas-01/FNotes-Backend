@@ -6,7 +6,7 @@ import validatePost from "../service/validatePost";
 import { DeleteFile, getAndDeleteFileById } from "../service/deleFileAfterPOst";
 import verifyCategory from "../service/verifyCategoryPost";
 import validator from "validator";
-
+import isAdmin from "../service/isAdmin";
 dotenv.config();
 
 export async function getAllPost(req: Request, res: Response) {
@@ -16,9 +16,8 @@ export async function getAllPost(req: Request, res: Response) {
   const offset: number = (page - 1) * limit;
   const { rowCount } = await db.query("SELECT id FROM post");
   const lastPage = Math.ceil(rowCount || 1 / limit);
-  db.query(
-    "SELECT post.cover , post.id as postid, post.status as poststatus, post.title , post.description , to_char(post.created_at , 'dd/mm/yyyy') as created_at , category.title as categoryTitle , category.description as categpryDesc FROM post JOIN category on post.categoryid = category.id WHERE post.categoryid = category.id LIMIT $1;",
-    [limit],
+  db.query("SELECT post.cover , post.id as postid, post.status as poststatus, post.title , post.description , to_char(post.created_at , 'dd/mm/yyyy') as created_at , category.title as categoryTitle , category.description as categpryDesc FROM post JOIN category on post.categoryid = category.id WHERE post.categoryid = category.id LIMIT $1 OFFSET $2;",
+    [limit , offset],
     async (err, result) => {
       if (err) {
         res.status(400).json({
@@ -41,6 +40,14 @@ export async function getAllPost(req: Request, res: Response) {
 
 export async function createPost(req: Request, res: Response) {
   const db = await ConnectToDb();
+  const isAdm = await isAdmin(req.headers["authorization"] || "");
+    if (!isAdm) {
+      res.status(400).json({
+        error: "permition not allowed",
+      });
+      return await db.end();
+  }
+  
   const serverPath = process.env.SERVER_PATH || "http://localhost:8080/";
   const post: ICreatePost = {
     categoryId: req.body.categoryId,
@@ -108,6 +115,13 @@ export async function getPostByID(req: Request, res: Response) {
 
 export async function deletePostById(req: Request, res: Response) {
   const db = await ConnectToDb();
+    const isAdm = await isAdmin(req.headers["authorization"] || "");
+    if (!isAdm) {
+      res.status(400).json({
+        error: "permition not allowed",
+      });
+      return await db.end();
+    }
   const id = req.params.id;
   if (!validator.isNumeric(id)) {
     res.status(400).json({
@@ -136,6 +150,12 @@ export async function deletePostById(req: Request, res: Response) {
 export async function updatePost(req: Request, res: Response) {
   const db = await ConnectToDb();
   const id = req.params.id;
+    const isAdm = await isAdmin(req.headers["authorization"] || "");
+    if (!isAdm) {
+      res.status(400).json({
+        error: "permition not allowed",
+      });
+    }
   const serverPath = process.env.SERVER_PATH || "http://localhost:8080/";
   const post: ICreatePost = {
     categoryId: req.body.categoryId,

@@ -2,7 +2,7 @@ import {Response , Request} from 'express'
 import ConnectToDb from '../database/dbConnection'
 import { ICretaeCategory } from '../types/types'
 import validator from 'validator'
-
+import isAdmin from '../service/isAdmin'
 
 export async function getAllCategory(req: Request, res: Response) {
     const db = await ConnectToDb()
@@ -32,6 +32,13 @@ export async function getAllCategory(req: Request, res: Response) {
 
 export async function createCategory(req: Request, res: Response) {
     const db = await ConnectToDb()
+    const isAdm = await isAdmin(req.headers["authorization"] || "");
+    if (!isAdm) {
+      res.status(400).json({
+        error: "permition not allowed",
+      });
+      return await db.end();
+    }
     const category: ICretaeCategory = {
         description: req.body.description,
         title: req.body.title,
@@ -63,6 +70,13 @@ export async function createCategory(req: Request, res: Response) {
 
 export async function updateCategory(req: Request, res: Response) {
   const db = await ConnectToDb();
+    const isAdm = await isAdmin(req.headers["authorization"] || "");
+    if (!isAdm) {
+      res.status(400).json({
+        error: "permition not allowed",
+      });
+      return await db.end();
+    }
   const category: ICretaeCategory = {
     description: req.body.description,
     title: req.body.title,
@@ -120,6 +134,13 @@ export async function getCategoryById(req: Request, res: Response) {
 
 export async function deleteCategory(req: Request, res: Response) {
   const db = await ConnectToDb();
+    const isAdm = await isAdmin(req.headers["authorization"] || "");
+    if (!isAdm) {
+      res.status(400).json({
+        error: "permition not allowed",
+      });
+      return await db.end();
+    }
   const id: number = Number(req.params.id);
   if (id) {
     db.query("DELETE FROM category WHERE id = $1;",[id],async (err, result) => {
