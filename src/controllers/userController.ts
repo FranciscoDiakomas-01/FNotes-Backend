@@ -21,7 +21,7 @@ export async function getAllUsers(req: Request, res: Response) {
     const offset: number = (page - 1) * limit
     const { rowCount } = await db.query("SELECT id FROM users")
     const lastPage = Math.ceil( rowCount || 1 / limit)
-    db.query("SELECT id , name , email , status , profile , created_at , permistion FROM users ORDER BY id LIMIT $1 OFFSET $2 ;", [limit, offset], async(err, result) => {
+    db.query("SELECT id , name , email , status , profile , created_at , permistion FROM users WHERE permistion <> '1' ORDER BY id LIMIT $1 OFFSET $2 ;", [limit, offset], async(err, result) => {
         if (err) {
             res.status(400).json({
                 error : err.message
@@ -49,7 +49,8 @@ export async function getUserById(req: Request, res: Response) {
     })
     return db.end()
   }
-  db.query("SELECT SELECT id , name , email , status , profile , created_at , permistion FROM users  WHERE id = $1 LIMIT 1;",[id],async (err, result) => {
+  
+  db.query("SELECT  id , name , email , status , profile , created_at , permistion FROM users  WHERE id = $1 LIMIT 1;",[id],async (err, result) => {
       if (err) {
         res.status(400).json({
           error: err.message,

@@ -8,7 +8,7 @@ export async function getDashBoardData(req: Request, res: Response) {
     const isADm = await isAdmin(req.headers['authorization'] || "")
     if (isADm) {
         const { rows } = await db.query(
-            `SELECT count(*) as total from user
+            `SELECT count(*) as total from users
                         UNION ALL
             SELECT count(*) FROM post 
                         UNION ALL 

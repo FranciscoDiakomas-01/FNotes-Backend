@@ -5,6 +5,8 @@ import { ILogin } from '../types/types'
 import ConnectToDb from '../database/dbConnection'
 import validator from 'validator'
 import { GerenetaToken } from '../middlewares/token'
+import jwt from 'jsonwebtoken'
+import isAdmin from '../service/isAdmin'
 dotnenv.config()
 
 export default async function login(req: Request, res: Response) {
@@ -48,4 +50,13 @@ export default async function login(req: Request, res: Response) {
     }
     //
 
+}
+
+export async function isAdminController(req : Request , res : Response) {
+    
+    const token = req.params.token
+    const response = await isAdmin(token)
+    return res.status(200).json({
+        response
+    })
 }

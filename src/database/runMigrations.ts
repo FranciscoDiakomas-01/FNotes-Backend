@@ -14,14 +14,15 @@ export default async function RunnMigrations() {
                   //running each sql query from each file in mygration folder or dir
                   const sqlQuery = fs.readFileSync(path.join(__dirname + `/migrations/${file}`), { encoding: 'utf-8' });
                   if (sqlQuery.toString().length > 0) {
-                    await db.query(sqlQuery.toString(), (err, rows) => {
+                    await db.query(sqlQuery.toString(), async(err, rows) => {
                         if (err) {
                           console.log("error running migration ", err.message, " ", file);
                           process.exit(1)
                         } 
+                      return await db.end();
                     });
                   } else {
-                          console.log("Empty file" + file)
+                          console.log("Empty file Mirations/" + file)
                           process.exit(1);
                   }
             });

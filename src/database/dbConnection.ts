@@ -1,10 +1,10 @@
-import {Pool} from 'pg'
+import {Client} from 'pg'
 import dotenv from 'dotenv'
 
 dotenv.config()
 
 export default async function ConnectToDb() {
-    const pool = new Pool({
+    const client = new Client({
       user: process.env.DB_USER,
       host: process.env.DB_HOST,
       database: process.env.DB_NAME,
@@ -12,11 +12,11 @@ export default async function ConnectToDb() {
       password: process.env.DB_PASSWORD,
     });
 
-    pool.connect((err) => {
-        if (err) {
-            console.log(err);
-            return
-        } 
+    client.connect((err) => {
+      if (err) {
+        console.log(err);
+        return;
+      }
     });
-    return pool 
+    return client; 
 }

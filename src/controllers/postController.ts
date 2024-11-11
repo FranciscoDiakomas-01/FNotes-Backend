@@ -15,7 +15,7 @@ export async function getAllPost(req: Request, res: Response) {
   const page: number = Number(req.query.page) || 1;
   const offset: number = (page - 1) * limit;
   const { rowCount } = await db.query("SELECT id FROM post");
-  const lastPage = Math.ceil(rowCount || 1 / limit);
+  const lastPage = Math.ceil(rowCount / limit);
   db.query("SELECT post.cover , post.id as postid, post.status as poststatus, post.title , post.description , to_char(post.created_at , 'dd/mm/yyyy') as created_at , category.title as categoryTitle , category.description as categpryDesc FROM post JOIN category on post.categoryid = category.id WHERE post.categoryid = category.id LIMIT $1 OFFSET $2;",
     [limit , offset],
     async (err, result) => {
@@ -180,7 +180,7 @@ export async function updatePost(req: Request, res: Response) {
     if (rows[0]?.id == undefined || !valiationResult || !categoryvalidation) {
         await DeleteFile(req.file?.path || "");
         res.status(400).json({
-            error : "post not found , or category not found"
+            error : "post not found ,invalid body or category not found" 
         })
         return await db.end()
     }

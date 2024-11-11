@@ -23,6 +23,7 @@ export default async function InsertDefaultAdmin() {
         await db.query("INSERT INTO users(id , name , email , password , permistion , profile ) VALUES (1 , 'admin' , 'admin@gmail.com' , $1 , 1 , $2)", [password.toString(), profile]);
         console.log("fininhing creating admin", Date.now());
         console.log("Admin created sucessly");
+        await db.end()
         
     }
 }
