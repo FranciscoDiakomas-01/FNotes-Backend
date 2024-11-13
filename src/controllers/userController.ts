@@ -19,9 +19,9 @@ export async function getAllUsers(req: Request, res: Response) {
     const limit : number = Number(req.query.limit) || 10
     const page  : number = Number(req.query.page) || 1
     const offset: number = (page - 1) * limit
-    const { rowCount } = await db.query("SELECT id FROM users")
-    const lastPage = Math.ceil( rowCount || 1 / limit)
-    db.query("SELECT id , name , email , status , profile , created_at , permistion FROM users WHERE permistion <> '1' ORDER BY id LIMIT $1 OFFSET $2 ;", [limit, offset], async(err, result) => {
+    const { rowCount } = await db.query("SELECT id FROM users WHERE permistion = 2")
+    const lastPage = Math.ceil( rowCount  / limit)
+    db.query("SELECT id , name , email , status , profile , created_at , permistion FROM users WHERE permistion = 2 ORDER BY id LIMIT $1 OFFSET $2 ;", [limit, offset], async(err, result) => {
         if (err) {
             res.status(400).json({
                 error : err.message
@@ -47,7 +47,7 @@ export async function getUserById(req: Request, res: Response) {
     res.status(400).json({
         error : "invalid id"
     })
-    return db.end()
+    return await db.end()
   }
   
   db.query("SELECT  id , name , email , status , profile , created_at , permistion FROM users  WHERE id = $1 LIMIT 1;",[id],async (err, result) => {
@@ -153,7 +153,7 @@ export async function UpdateUser(req: Request, res: Response){
     
     const cipher = CryptoJS.AES.encrypt(
       req.body.password,
-      process.env.PASS_CRYPT || "dfahlkluh"
+      process.env.PASS_CRYPT 
     );
     const vaidationResult = ValidateUserCreation(req.body)
      const user: ICreateUser = {
@@ -170,12 +170,12 @@ export async function UpdateUser(req: Request, res: Response){
                 res.status(400).json({
                   error: "email alredy in use",
                 });
-                return db.end();
+                return await db.end();
             } else {
                 res.status(200).json({
                     data : result.rowCount
                 })
-                return db.end();
+                return await db.end();
             }
         })
     } else {

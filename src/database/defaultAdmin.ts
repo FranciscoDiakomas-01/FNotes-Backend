@@ -10,6 +10,7 @@ export default async function InsertDefaultAdmin() {
     //o banco de dados será esvaziado
     if (rows[0]?.id == 1) {
         console.log("Admin found")
+        await db.end()
     } else {
         //deleterar todos os dados e cadastrar um novo admin
         console.log("starting creating admin" , Date.now())
@@ -18,9 +19,15 @@ export default async function InsertDefaultAdmin() {
         await db.query("DELETE FROM category");
         await db.query("DELETE FROM post");
         await db.query("DELETE FROM comment");
-        const password = CryptoJS.AES.encrypt("admin12345", process.env.PASS_CRYPT || "")
-        const profile = process.env.SERVER_PATH + 'admin.png'
-        await db.query("INSERT INTO users(id , name , email , password , permistion , profile ) VALUES (1 , 'admin' , 'admin@gmail.com' , $1 , 1 , $2)", [password.toString(), profile]);
+        const password = CryptoJS.AES.encrypt(process.env.DEFAULT_USER_PASS, process.env.PASS_CRYPT)
+        await db.query(
+          "INSERT INTO users(id , name , email , password , permistion) VALUES (1 , '$1' , '$2' , $3 , 1)",
+          [
+            process.env.DEFAULT_USER,
+            process.env.DEFAULT_USER_EMAIL,
+            password.toString(),
+          ]
+        );
         console.log("fininhing creating admin", Date.now());
         console.log("Admin created sucessly");
         await db.end()
@@ -28,3 +35,4 @@ export default async function InsertDefaultAdmin() {
     }
 }
 
+ 

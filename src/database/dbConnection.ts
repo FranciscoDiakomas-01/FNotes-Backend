@@ -14,9 +14,9 @@ export default async function ConnectToDb() {
 
     client.connect((err) => {
       if (err) {
-        console.log(err);
-        return;
+        process.exit(1);
       }
     });
     return client; 
 }
+
