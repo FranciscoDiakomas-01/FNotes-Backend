@@ -37,7 +37,5 @@ export async function getAndDeleteFileById(postId: number | string, db: Pool) {
           }
         );
       } 
-    
-     
 }
 

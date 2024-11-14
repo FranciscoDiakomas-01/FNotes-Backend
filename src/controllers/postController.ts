@@ -38,6 +38,7 @@ export async function getAllPost(req: Request, res: Response) {
   );
 }
 
+
 export async function createPost(req: Request, res: Response) {
   const db = await ConnectToDb();
   const isAdm = await isAdmin(req.headers["authorization"] || "");
@@ -47,7 +48,7 @@ export async function createPost(req: Request, res: Response) {
       });
       return await db.end();
   }
-  
+
   const serverPath = process.env.SERVER_PATH || "http://localhost:8080/";
   const post: ICreatePost = {
     categoryId: req.body.categoryId,

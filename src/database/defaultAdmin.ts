@@ -20,8 +20,7 @@ export default async function InsertDefaultAdmin() {
         await db.query("DELETE FROM post");
         await db.query("DELETE FROM comment");
         const password = CryptoJS.AES.encrypt(process.env.DEFAULT_USER_PASS, process.env.PASS_CRYPT)
-        await db.query(
-          "INSERT INTO users(id , name , email , password , permistion) VALUES (1 , '$1' , '$2' , $3 , 1)",
+        await db.query("INSERT INTO users(id , name , email , password , permistion) VALUES (1 , '$1' , '$2' , $3 , 1)",
           [
             process.env.DEFAULT_USER,
             process.env.DEFAULT_USER_EMAIL,
@@ -31,8 +30,5 @@ export default async function InsertDefaultAdmin() {
         console.log("fininhing creating admin", Date.now());
         console.log("Admin created sucessly");
         await db.end()
-        
     }
 }
-
- 
