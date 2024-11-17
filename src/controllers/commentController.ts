@@ -3,6 +3,7 @@ import ConnectToDb from "../database/dbConnection";
 import { ICreateComment } from "../types/types";
 import getIdInToken from "../service/getIdInToken";
 import validator from "validator";
+import isAdmin from "../service/isAdmin";
 
 export async function getAllComent(req: Request, res: Response) {
   const db = await ConnectToDb();
@@ -116,20 +117,23 @@ export async function deleteComment(req: Request, res: Response) {
   const db = await ConnectToDb();
   //pegar o Id do usuario no token
   const userId = getIdInToken(req.headers["authorization"]);
+  const isADm = await isAdmin(req.headers["authorization"]);
   //se o userId for igual ao comment.userId entt pode eliminar
   const commetId = Number(req.params.id);
   const { rows } = await db.query("SELECT userid , id FROM comment WHERE userid = $1 and id = $2 LIMIT 1;",[userId, commetId]);
-  if (rows[0]?.userid == userId && rows[0]?.id == commetId) {
+  if (isADm || rows[0]?.userid == userId && rows[0]?.id == commetId ) {
     //se o id do criador for igual  e se o id passado for encotrado então deleta
-    await db.query("DELETE FROM comment WHERE id = $1 and userid = $2;",[commetId, userId]);
-    await db.end();
-    return res.status(200).json({
-      data: "deleted",
-    }); 
+    db.query("DELETE FROM comment WHERE id = $1;", [commetId], async(err, result) => {
+      
+      await db.end();
+      return res.status(200).json({
+        data:"deleted"
+      }); 
+    });
   } else {
     await db.end();
     return res.status(401).json({
-      error: "comment not found",
+      error: "permition not allowed",
     });
   }
 }

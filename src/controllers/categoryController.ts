@@ -6,7 +6,13 @@ import isAdmin from '../service/isAdmin'
 
 export async function getAllCategory(req: Request, res: Response) {
     const db = await ConnectToDb()
-    db.query("SELECT id , title , description , to_char(created_at , 'dd/mm/yyyy') as created_at FROM category;",  async(err, result) => {
+    
+    const limit: number = Number(req.query.limit) || 10;
+    const page: number = Number(req.query.page) || 1;
+    const offset: number = (page - 1) * limit;
+    const { rowCount } = await db.query("SELECT id FROM category ;");
+    const lastPage = Math.ceil(rowCount / limit);
+    db.query("SELECT id , title , description , to_char(created_at , 'dd/mm/yyyy') as created_at FROM category  ORDER BY id DESC LIMIT $1 OFFSET $2;" , [limit , offset],  async(err, result) => {
       if (err) {
            await db.end();
             return res.status(400).json({
@@ -17,6 +23,9 @@ export async function getAllCategory(req: Request, res: Response) {
            await db.end();
             return res.status(200).json({
               data: result.rows,
+              currentPage: page,
+              lastPage,
+              total: rowCount,
             });
         }
     })

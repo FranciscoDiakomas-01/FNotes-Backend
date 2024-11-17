@@ -5,7 +5,7 @@ dotenv.config();
 
 export default async function isAdmin(token: string) {
   const db = await ConnectToDb();
-  return jwt.verify(token || "",process.env.JWT || "my secret token base",async (error, payload) => {
+  return jwt.verify(token , process.env.JWT ,async (error, payload) => {
       if (error) {
           return false;
         } else {

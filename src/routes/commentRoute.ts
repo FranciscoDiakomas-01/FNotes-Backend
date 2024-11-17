@@ -3,8 +3,8 @@ import { getAllComent , createComment , getAllComentByPostId , updateComment , d
 import { VerifyToken } from '../middlewares/token'
 
 const commentRouter = Router()
-commentRouter.get("/comments" , VerifyToken ,  getAllComent)
-commentRouter.get("/commentsbyPost/:id", VerifyToken, getAllComentByPostId);
+commentRouter.get("/comments" ,  getAllComent)
+commentRouter.get("/commentsbyPost/:id",  getAllComentByPostId);
 commentRouter.post("/comment", VerifyToken , createComment);
 commentRouter.put("/comment/:id", VerifyToken, updateComment);
 commentRouter.delete("/comment/:id", VerifyToken, deleteComment);

@@ -16,7 +16,7 @@ export async function getAllPost(req: Request, res: Response) {
   const offset: number = (page - 1) * limit;
   const { rowCount } = await db.query("SELECT id FROM post");
   const lastPage = Math.ceil(rowCount / limit);
-  db.query("SELECT post.cover , post.id as postid, post.status as poststatus, post.title , post.description , to_char(post.created_at , 'dd/mm/yyyy') as created_at , category.title as categoryTitle , category.description as categpryDesc FROM post JOIN category on post.categoryid = category.id WHERE post.categoryid = category.id LIMIT $1 OFFSET $2;",
+  db.query("SELECT post.cover , post.id as postid, post.status as poststatus, post.title , post.description , to_char(post.created_at , 'dd/mm/yyyy') as created_at , category.title as categoryTitle , category.id as categoryId FROM post  JOIN category on post.categoryid = category.id WHERE post.categoryid = category.id LIMIT $1 OFFSET $2 ;",
     [limit , offset],
     async (err, result) => {
       if (err) {
@@ -60,8 +60,7 @@ export async function createPost(req: Request, res: Response) {
   const categoryvalidation = await verifyCategory(db, post.categoryId);
   if (valiationResult && categoryvalidation) {
     //insert into database
-    db.query(
-      "INSERT INTO post(title , description , categoryId , cover) VALUES($1 , $2 , $3 , $4) RETURNING id;",
+    db.query("INSERT INTO post(title , description , categoryId , cover) VALUES( $1 , $2 , $3 , $4) RETURNING id;",
       [post.title, post.description, post.categoryId, post.cover],
       async (err, result) => {
         if (err) {
@@ -95,8 +94,7 @@ export async function getPostByID(req: Request, res: Response) {
     });
     return await db.end();
   }
-  db.query(
-    "SELECT post.cover , post.id , post.status , post.title , post.description , to_char(post.created_at , 'dd/mm/yyyy') as created_at , category.title as categoryTitle , category.description as categpryDesc FROM post JOIN category on post.categoryid = category.id WHERE post.id = $1 and  post.categoryid = category.id LIMIT 1;",
+  db.query("SELECT post.cover , post.id , post.status , post.title , post.description , to_char(post.created_at , 'dd/mm/yyyy') as created_at , category.title as categoryTitle , category.id as categoryId FROM post JOIN category on post.categoryid = category.id WHERE post.id = $1 and  post.categoryid = category.id LIMIT 1;",
     [id],
     async (err, result) => {
       if (err) {
@@ -148,22 +146,22 @@ export async function deletePostById(req: Request, res: Response) {
   }
 }
 
+
 export async function updatePost(req: Request, res: Response) {
   const db = await ConnectToDb();
   const id = req.params.id;
-    const isAdm = await isAdmin(req.headers["authorization"] || "");
+    const isAdm = await isAdmin(req.headers["authorization"]);
     if (!isAdm) {
       res.status(400).json({
         error: "permition not allowed",
       });
     }
-  const serverPath = process.env.SERVER_PATH || "http://localhost:8080/";
+  const serverPath = process.env.SERVER_PATH;
   const post: ICreatePost = {
     categoryId: req.body.categoryId,
-    cover: serverPath + req.file?.filename,
+    cover: req.file != undefined || req.file != null ? serverPath + req.file?.filename : req.body.file,
     description: req.body.description,
     title: req.body.title,
-    status : req.body.status
   };
   if (!validator.isNumeric(id)) {
     res.status(400).json({
@@ -179,17 +177,20 @@ export async function updatePost(req: Request, res: Response) {
     //caso a validacao , a categoria ou o post não existe elimine o arquivo submetido
     const { rows } = await db.query("SELECT id FROM post WHERE id = $1 LIMIT 1;", [id])
     if (rows[0]?.id == undefined || !valiationResult || !categoryvalidation) {
-        await DeleteFile(req.file?.path || "");
+        await db.end();
+        await DeleteFile(req.file?.path);
         res.status(400).json({
             error : "post not found ,invalid body or category not found" 
         })
-        return await db.end()
+        return 
     }
     //caso tenha um arquivo novo post sera eliminado o arquivo que estava lá caso exista
-    await getAndDeleteFileById(id, db);
+    if (req.file != undefined || req.file != null) {
+      await getAndDeleteFileById(id, db);
+    }
     if (valiationResult && categoryvalidation) {
     //update post by Id
-    db.query("UPDATE  post SET title = $1 , description = $2 , categoryId = $3 , cover = $4 , status = $5 WHERE id = $6;",[  post.title,  post.description,  post.categoryId,  post.cover,  post.status,  id,],async (err, result) => {
+    db.query("UPDATE  post SET title = $1 , description = $2 , categoryId = $3 , cover = $4  WHERE id = $5;",[post.title, post.description, post.categoryId, post.cover , id],async (err, result) => {
         if (err) {
             res.status(400).json({
                 error: err.message,
@@ -210,4 +211,33 @@ export async function updatePost(req: Request, res: Response) {
       });
     }
   }
+}
+
+
+export async function getPostByCategoryId(req: Request, res: Response) {
+  const db = await ConnectToDb();
+  const id = req.params.id;
+  if (!validator.isNumeric(id)) {
+    res.status(400).json({
+      error: "invalid id",
+    });
+    return await db.end();
+  }
+  db.query(
+    "SELECT post.cover , post.id , post.status , post.title , post.description , to_char(post.created_at , 'dd/mm/yyyy') as created_at , category.title as categoryTitle , category.id as categoryId FROM post JOIN category on post.categoryid = category.id WHERE post.categoryid = $1;",
+    [id],
+    async (err, result) => {
+      if (err) {
+        res.status(400).json({
+          error: err.message,
+        });
+        return await db.end();
+      } else {
+        res.status(200).json({
+          data: result.rows,
+        });
+        return await db.end();
+      }
+    }
+  );
 }

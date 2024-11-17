@@ -9,8 +9,7 @@ CREATE TABLE IF NOT EXISTS users (
     password text not null ,
     status smallint DEFAULT 0,
     created_at timestamp default now(),
-    permistion smallint default 2,
-    profile text
+    permistion smallint default 2
 );
 
 /*
@@ -31,7 +30,7 @@ CREATE TABLE IF NOT EXISTS post(
     id serial not null primary key,
     title varchar(50) not null unique,
     cover text,
-    description text check(length(description) <= 200),
+    description text,
     categoryId int not null references category(id) on delete cascade,
     status int not null default 1,
     created_at timestamp not null default now()

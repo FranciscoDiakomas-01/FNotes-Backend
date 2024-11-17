@@ -1,6 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import { Pool } from 'pg'
+import { Client } from 'pg'
 import dotenv from 'dotenv'
 dotenv.config()
 
@@ -14,7 +14,7 @@ export async function DeleteFile(filepath : string) {
     }
 }
 
-export async function getAndDeleteFileById(postId: number | string, db: Pool) {
+export async function getAndDeleteFileById(postId: number | string, db: Client) {
     const { rows } = await db.query("SELECT cover  FROM post WHERE id = $1 LIMIT 1", [postId])
     const postFile = rows[0]?.cover
     if (postFile) {

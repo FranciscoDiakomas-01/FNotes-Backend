@@ -4,7 +4,8 @@ export interface ICreateUser {
     name: string,
     email: string,
     status: number
-    password: string
+    password: string,
+    newPassword?: string
 }
 
 //createAdmin

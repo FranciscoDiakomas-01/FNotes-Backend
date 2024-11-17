@@ -11,6 +11,7 @@ import commentRouter from './routes/commentRoute'
 import InsertDefaultAdmin from './database/defaultAdmin'
 import dashBoardRouter from './routes/dashBoard'
 dotenv.config();
+
 async function RunnServer() {
     await RunnMigrations()
     try {

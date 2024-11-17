@@ -3,8 +3,8 @@ import { getAllCategory , createCategory , getCategoryById , deleteCategory , up
 import { VerifyToken } from '../middlewares/token'
 
 const categoryRouter = Router()
-categoryRouter.get("/category", VerifyToken ,  getAllCategory)
-categoryRouter.get("/category/:id", VerifyToken ,  getCategoryById);
+categoryRouter.get("/category",  getAllCategory)
+categoryRouter.get("/category/:id" ,  getCategoryById);
 categoryRouter.delete("/category/:id", VerifyToken , deleteCategory);
 categoryRouter.post("/category", VerifyToken , createCategory);
 categoryRouter.put("/category/:id", VerifyToken ,  updateCategory);
