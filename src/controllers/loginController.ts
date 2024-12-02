@@ -7,9 +7,9 @@ import validator from 'validator'
 import { GerenetaToken } from '../middlewares/token'
 import isAdmin from '../service/isAdmin'
 dotnenv.config()
-
+const db =  ConnectToDb;
 export default async function login(req: Request, res: Response) {
-    const db = await ConnectToDb()
+    
     const loginBody: ILogin = {
         email: req.body.email,
         password : req.body.password
@@ -18,7 +18,6 @@ export default async function login(req: Request, res: Response) {
     if (validator.isEmail(loginBody.email) && loginBody?.password.length >= 8) {
         const { rows } = await db.query("SELECT email , id , password FROM users WHERE email = $1 LIMIT 1;",[loginBody.email]);
         if (rows.length == 0) {
-            await db.end();
             return res.status(200).json({
                 error: "user not found",
             });
@@ -32,16 +31,13 @@ export default async function login(req: Request, res: Response) {
                     token,
                     isAdmin: rows[0]?.id == 1 
                 });
-                return await db.end();
             } else {
-                await db.end();
                 return res.status(200).json({
                     error: "wrong password",
                 });
             }
         }
     } else {
-        await db.end();
         return res.status(400).json({
             error: "wrong email or password",
         });

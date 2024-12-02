@@ -8,14 +8,13 @@ import verifyCategory from "../service/verifyCategoryPost";
 import validator from "validator";
 import isAdmin from "../service/isAdmin";
 dotenv.config();
-
+const db =  ConnectToDb;
 export async function getAllPost(req: Request, res: Response) {
-  const db = await ConnectToDb();
   const limit: number = Number(req.query.limit) || 10;
   const page: number = Number(req.query.page) || 1;
   const offset: number = (page - 1) * limit;
   const { rowCount } = await db.query("SELECT id FROM post");
-  const lastPage = Math.ceil(rowCount / limit);
+  const lastPage = Math.ceil(Number(rowCount) / limit);
   db.query("SELECT post.cover , post.id as postid, post.status as poststatus, post.title , post.description , to_char(post.created_at , 'dd/mm/yyyy') as created_at , category.title as categoryTitle , category.id as categoryId FROM post  JOIN category on post.categoryid = category.id WHERE post.categoryid = category.id LIMIT $1 OFFSET $2 ;",
     [limit , offset],
     async (err, result) => {
@@ -23,7 +22,7 @@ export async function getAllPost(req: Request, res: Response) {
         res.status(400).json({
           error: err.message,
         });
-        return await db.end();
+        return
       } else {
         res.status(200).json({
           data: result.rows,
@@ -32,7 +31,7 @@ export async function getAllPost(req: Request, res: Response) {
           currentLimt: limit,
           total: rowCount,
         });
-        return await db.end();
+        return
       }
     }
   );
@@ -40,13 +39,12 @@ export async function getAllPost(req: Request, res: Response) {
 
 
 export async function createPost(req: Request, res: Response) {
-  const db = await ConnectToDb();
   const isAdm = await isAdmin(req.headers["authorization"] || "");
     if (!isAdm) {
       res.status(400).json({
         error: "permition not allowed",
       });
-      return await db.end();
+      return
   }
 
   const serverPath = process.env.SERVER_PATH || "http://localhost:8080/";
@@ -67,12 +65,12 @@ export async function createPost(req: Request, res: Response) {
           res.status(400).json({
             error: err.message,
           });
-          return await db.end();
+          return
         } else {
           res.status(201).json({
             data: result.rows,
           });
-          return await db.end();
+          return
         }
       }
     );
@@ -81,18 +79,17 @@ export async function createPost(req: Request, res: Response) {
     res.status(400).json({
       error: "inavlid post or catgory doesn´t exists!",
     });
-    return await db.end();
+    return
   }
 }
 
 export async function getPostByID(req: Request, res: Response) {
-  const db = await ConnectToDb();
   const id = req.params.id;
   if (!validator.isNumeric(id)) {
     res.status(400).json({
       error: "invalid id",
     });
-    return await db.end();
+    return
   }
   db.query("SELECT post.cover , post.id , post.status , post.title , post.description , to_char(post.created_at , 'dd/mm/yyyy') as created_at , category.title as categoryTitle , category.id as categoryId FROM post JOIN category on post.categoryid = category.id WHERE post.id = $1 and  post.categoryid = category.id LIMIT 1;",
     [id],
@@ -101,32 +98,31 @@ export async function getPostByID(req: Request, res: Response) {
         res.status(400).json({
           error: err.message,
         });
-        return await db.end();
+        return
       } else {
         res.status(200).json({
           data: result.rows,
         });
-        return await db.end();
+        return
       }
     }
   );
 }
 
 export async function deletePostById(req: Request, res: Response) {
-  const db = await ConnectToDb();
     const isAdm = await isAdmin(req.headers["authorization"] || "");
     if (!isAdm) {
       res.status(400).json({
         error: "permition not allowed",
       });
-      return await db.end();
+      return
     }
   const id = req.params.id;
   if (!validator.isNumeric(id)) {
     res.status(400).json({
       error: "invalid id",
     });
-    return await db.end();
+    return
   } else {
     await getAndDeleteFileById(id, db);
     db.query("DELETE FROM post WHERE id = $1;", [id], async (err, result) => {
@@ -135,12 +131,12 @@ export async function deletePostById(req: Request, res: Response) {
         res.status(400).json({
           error: err.message,
         });
-        return await db.end();
+        return
       } else {
         res.status(200).json({
           data: result.rowCount == 0 ? "not found" : "deleted",
         });
-        return await db.end();
+        return
       }
     });
   }
@@ -148,9 +144,8 @@ export async function deletePostById(req: Request, res: Response) {
 
 
 export async function updatePost(req: Request, res: Response) {
-  const db = await ConnectToDb();
   const id = req.params.id;
-    const isAdm = await isAdmin(req.headers["authorization"]);
+    const isAdm = await isAdmin(String(req.headers["authorization"]));
     if (!isAdm) {
       res.status(400).json({
         error: "permition not allowed",
@@ -167,7 +162,7 @@ export async function updatePost(req: Request, res: Response) {
     res.status(400).json({
       error: "invalid id",
     });
-    return await db.end();
+    return
   } else {
     
     //validar se o post e a category corresponde com os termos
@@ -177,8 +172,7 @@ export async function updatePost(req: Request, res: Response) {
     //caso a validacao , a categoria ou o post não existe elimine o arquivo submetido
     const { rows } = await db.query("SELECT id FROM post WHERE id = $1 LIMIT 1;", [id])
     if (rows[0]?.id == undefined || !valiationResult || !categoryvalidation) {
-        await db.end();
-        await DeleteFile(req.file?.path);
+        await DeleteFile(String(req.file?.path));
         res.status(400).json({
             error : "post not found ,invalid body or category not found" 
         })
@@ -195,12 +189,12 @@ export async function updatePost(req: Request, res: Response) {
             res.status(400).json({
                 error: err.message,
             });
-            return await db.end();
+            return
         } else {
             res.status(201).json({
                 data: result.rowCount == 0 ? 'not found' : 'updated' ,
             });
-            return await db.end();
+            return
         }
         }
       );
@@ -215,13 +209,12 @@ export async function updatePost(req: Request, res: Response) {
 
 
 export async function getPostByCategoryId(req: Request, res: Response) {
-  const db = await ConnectToDb();
   const id = req.params.id;
   if (!validator.isNumeric(id)) {
     res.status(400).json({
       error: "invalid id",
     });
-    return await db.end();
+    return
   }
   db.query(
     "SELECT post.cover , post.id , post.status , post.title , post.description , to_char(post.created_at , 'dd/mm/yyyy') as created_at , category.title as categoryTitle , category.id as categoryId FROM post JOIN category on post.categoryid = category.id WHERE post.categoryid = $1;",
@@ -231,12 +224,12 @@ export async function getPostByCategoryId(req: Request, res: Response) {
         res.status(400).json({
           error: err.message,
         });
-        return await db.end();
+        return
       } else {
         res.status(200).json({
           data: result.rows,
         });
-        return await db.end();
+        return
       }
     }
   );
